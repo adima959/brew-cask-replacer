@@ -3,23 +3,23 @@ require 'fileutils'
 
 # Array of installed applications to exclude. Ex: Firefox Beta
 # exclude = ["firefox"]
-exclude = []
+exclude = ["expressvpn"]
 
 Dir.glob('/Applications/*.app').each do |path|
   next if File.symlink?(path)
 
   # Remove version numbers at the end of the name
   app = path.slice(14..-1).sub(/.app\z/, '').sub(/ \d*\z/, '')
-  searchresult = `brew search #{app}`
-  puts searchresult
+  searchresult = `brew search #{app}`.split("\n").select{ |i| i[/(?:^|\/)#{app}$/i] }
 
-  next unless searchresult =~ /Exact match/
+  next unless searchresult[0]
 
-  token = searchresult.split("\n")[1]
+  token = searchresult[0].split("/")[-1]
 
   next unless exclude.grep(/#{token}/).empty?
 
   puts "Installing #{token}..."
+
   begin
     FileUtils.mv(path, File.expand_path('~/.Trash/'))
   rescue Errno::EPERM, Errno::EEXIST
